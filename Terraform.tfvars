@@ -1,0 +1,7 @@
+rhcs_token = "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0NzQzYTkzMC03YmJiLTRkZGQtOTgzMS00ODcxNGRlZDc0YjUifQ.eyJpYXQiOjE3NDUzNDA3MjAsImp0aSI6IjAxNzk5NDg5LWY4MzYtNDE2MC1iOGE5LTg1ODFiMWJlYWQxOSIsImlzcyI6Imh0dHBzOi8vc3NvLnJlZGhhdC5jb20vYXV0aC9yZWFsbXMvcmVkaGF0LWV4dGVybmFsIiwiYXVkIjoiaHR0cHM6Ly9zc28ucmVkaGF0LmNvbS9hdXRoL3JlYWxtcy9yZWRoYXQtZXh0ZXJuYWwiLCJzdWIiOiJmOjUyOGQ3NmZmLWY3MDgtNDNlZC04Y2Q1LWZlMTZmNGZlMGNlNjpwYW5keWFsYXJha2VzaDk0IiwidHlwIjoiT2ZmbGluZSIsImF6cCI6ImNsb3VkLXNlcnZpY2VzIiwibm9uY2UiOiIxNWFiNDc0Yy0xODc2LTQyYjctYjE0Zi01YTQwNTIxN2U2NjMiLCJzaWQiOiIyNDc0YzI1Mi01ZDQ2LTQ4NDAtOTAwMS1iNWM2MjRjNDAwODQiLCJzY29wZSI6Im9wZW5pZCBiYXNpYyBhcGkuaWFtLnNlcnZpY2VfYWNjb3VudHMgcm9sZXMgd2ViLW9yaWdpbnMgY2xpZW50X3R5cGUucHJlX2tjMjUgb2ZmbGluZV9hY2Nlc3MifQ.Vnug2c94hBQn-TmNybXvfXOD-oEPTKLX1IcJQDyXVJLTsObCMYGcSpU6bGC6Yx43WIq98aA8PlZxiMUm4gupMQ"
+cluster_name        = "rosa-test-cluster"
+aws_region          = "us-east-1" # Choose your desired AWS region
+openshift_version   = "4.14.9"    # Specify a valid, available version
+compute_nodes       = 2        # Ensure this matches multi-AZ requirements if enabled (e.g., multiple of 3)
+# availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"] # Optional: uncomment and set if needed
+# tags = { ... } # Optional: override default tags
