@@ -1,4 +1,5 @@
-Deploy linux jump box
+**Deploy linux jump box**
+---------------------------
 
 Authenticate with iam key and secret by aws configure
 
@@ -38,9 +39,29 @@ rosa create user-role
 
 rosa create account-roles --mode auto
 
-cleanup for demo
-
-rosa delete ocm-role --mode auto --yes
-
 aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
+
+cleanup after demo
+
+rosa delete operator-roles --prefix rosa-test-muwy --mode auto -y
+
+rosa list user-roles -> after fetching the userrole delete it with below command
+
+rosa delete user-role --mode auto -y
+
+Remove the Role from the master/worker Instance Profile:
+
+aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg8-master-profile --role-name ManagedOpenShift-ControlPlane-Role
+
+aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg8-worker-profile --role-name ManagedOpenShift-Worker-Role
+
+Delete the master/workder Instance Profile:
+
+aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-master-profile
+
+aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-worker-profile
+
+rosa delete account-roles --prefix ManagedOpenShift --mode auto -y
+
+aws iam delete create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
 
