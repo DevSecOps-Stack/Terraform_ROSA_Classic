@@ -70,7 +70,7 @@ variable "tags" {
   type        = map(string)
   default = {
     "Environment" = "Development"
-    "Project"     = "ROSA Deployment"
+    "Project"     = "ROSADeployment"
     "ManagedBy"   = "Terraform"
   }
 }
