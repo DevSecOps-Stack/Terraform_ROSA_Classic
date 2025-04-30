@@ -54,7 +54,13 @@ provider "aws" {
 # -----------------------------------------------------------------------------
 # Input Variables
 # -----------------------------------------------------------------------------
+variable "aws_access_key" {
+  type = string
+}
 
+variable "aws_secret_key" {
+  type = string
+}
 variable "rhcs_token" {
   description = "Red Hat Cloud Services API Token (offline token recommended)."
   type        = string
@@ -161,6 +167,8 @@ resource "rhcs_cluster_rosa_classic" "rosa_cluster" {
   multi_az             = var.multi_az
   properties = {
     rosa_creator_arn = data.aws_caller_identity.current.arn # Track who created the cluster via Terraform
+    "aws.access_key_id"  = var.aws_access_key
+    "aws.secret_access_key" = var.aws_secret_key
   }
 
   # --- Corrected Version Attribute ---
