@@ -63,5 +63,9 @@ aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-worker-p
 
 rosa delete account-roles --prefix ManagedOpenShift --mode auto -y
 
+delete the openshift refresh token
+
+https://console.redhat.com/openshift/token/rosa/show
+
 aws iam delete create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
 
