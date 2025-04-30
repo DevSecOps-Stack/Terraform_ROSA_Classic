@@ -1,36 +1,35 @@
 # -----------------------------------------------------------------------------
-# Terraform Configuration for ROSA Cluster Deployment
+# Terraform Configuration for ROSA Classic STS Cluster Deployment
 #
 # This configuration deploys a Red Hat OpenShift Service on AWS (ROSA)
-# classic cluster using the official RHCS Terraform provider.
+# classic cluster using AWS STS for authentication.
 #
-# Prerequisites:
-# 1. Terraform CLI installed.
-# 2. AWS CLI installed and configured with appropriate permissions.
-# 3. ROSA CLI (`rosa`) installed and configured.
-# 4. Red Hat Cloud Services API token.
-# 5. Run `rosa login` to authenticate.
-# 6. Create the necessary Account Roles: `rosa create account-roles --mode auto --yes`
-# 7. Create the OIDC provider and Operator Roles *before* applying this Terraform config:
-#    `rosa create oidc-config --mode auto --yes`
-#    `rosa create operator-roles --cluster <your-cluster-name> --mode auto --yes`
-#    (Replace <your-cluster-name> with the value of `var.cluster_name`)
-#    Note: The Operator Roles prefix will be derived from your cluster name.
-#          Ensure the `operator_role_prefix` variable matches if you created them manually
-#          with a different prefix.
+# Prerequisites (MUST be done before terraform apply):
+# 1. Terraform CLI (>= 1.4.6) installed.[3, 4, 6, 11]
+# 2. AWS CLI installed and configured with appropriate permissions.[10, 12, 13, 4, 6, 9, 14, 11]
+# 3. ROSA CLI (`rosa`) installed.[4, 6]
+# 4. Valid Red Hat Cloud Services API token (Offline Token).[2, 3, 4, 6, 8, 9, 11]
+# 5. Run `rosa login --token=<your_token>`.[2, 4, 8, 9]
+# 6. Create Account Roles: `rosa create account-roles --mode auto --yes`.[2, 7, 8, 9]
+#    (Note the prefix, default is 'ManagedOpenShift'. Adjust ARNs below if different).
+# 7. Create OIDC Config: `rosa create oidc-config --mode auto --yes`.[2, 7, 8]
+#    (Find the ID using `rosa list oidc-config` and set `oidc_config_id` variable).
+# 8. Create Operator Roles: `rosa create operator-roles --cluster <var.cluster_name> --mode auto --yes`.[2, 7, 8]
+#    (Find the exact prefix using `rosa list operator-roles` and set `operator_role_prefix` variable).
 # -----------------------------------------------------------------------------
 
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.95.0"
+      version = "~> 5.0" # Using version constraint based on user's input
     }
     rhcs = {
-      version = "1.6.8"
       source  = "terraform-redhat/rhcs"
+      version = "~> 1.6" # Using version constraint based on user's input
     }
   }
+  required_version = ">= 1.4.6" # Recommended minimum version [3, 4, 6, 11]
 }
 
 # -----------------------------------------------------------------------------
@@ -38,121 +37,33 @@ terraform {
 # -----------------------------------------------------------------------------
 
 # Configure the Red Hat Cloud Services Provider
-# The token can also be provided via the RHCS_TOKEN environment variable.
+# Token is best provided via TF_VAR_rhcs_token environment variable or a secure tfvars file [2, 3, 4]
 provider "rhcs" {
   token = var.rhcs_token
-  url   = var.rhcs_url # Optional: Defaults to https://api.openshift.com
+  url   = var.rhcs_url
 }
 
 # Configure the AWS Provider
 # Assumes AWS credentials are configured via environment variables,
-# shared credentials file, or IAM instance profile.
+# shared credentials file (~/.aws/credentials), or IAM instance profile.[10, 15, 12, 2, 13, 4, 16, 9, 14, 17, 11, 18]
 provider "aws" {
   region = var.aws_region
 }
 
 # -----------------------------------------------------------------------------
-# Input Variables
+# Data Sources
 # -----------------------------------------------------------------------------
-variable "aws_access_key" {
-  type = string
+
+# Get current AWS account ID and caller identity ARN
+data "aws_caller_identity" "current" {}
+
+# Get default AWS Account Role prefix if not provided
+locals {
+  # Default prefix used by 'rosa create account-roles --mode auto'
+  default_account_role_prefix = "ManagedOpenShift"
+  # Use provided prefix if set, otherwise use the default
+  account_role_prefix = coalesce(var.account_role_prefix, local.default_account_role_prefix)
 }
-
-variable "aws_secret_key" {
-  type = string
-}
-variable "rhcs_token" {
-  description = "Red Hat Cloud Services API Token (offline token recommended)."
-  type        = string
-  sensitive   = true
-  # Best practice: Set this via an environment variable (TF_VAR_rhcs_token) or a .tfvars file.
-}
-
-variable "rhcs_url" {
-  description = "Red Hat Cloud Services API URL."
-  type        = string
-  default     = "https://api.openshift.com"
-}
-
-variable "cluster_name" {
-  description = "Name for the ROSA cluster."
-  type        = string
-  default     = "my-rosa-cluster"
-}
-
-variable "aws_region" {
-  description = "AWS region where the cluster will be deployed."
-  type        = string
-  default     = "us-east-1"
-}
-
-# --- Corrected Variable Name ---
-variable "openshift_version" {
-  description = "Desired OpenShift version for the cluster (e.g., '4.14.9'). Use `rosa list versions` to see available versions."
-  type        = string
-  default     = "4.14.9"
-  # It's best to explicitly set this or fetch the latest stable version dynamically if needed.
-}
-# --- End Correction ---
-
-
-variable "compute_machine_type" {
-  description = "EC2 instance type for the compute nodes."
-  type        = string
-  default     = "m5.xlarge"
-}
-
-variable "compute_nodes" {
-  description = "Number of compute nodes for the cluster (minimum 2 for multi-AZ)."
-  type        = number
-  default     = 1 # Must be a multiple of the number of availability zones (usually 3 for default ROSA) if using multi-AZ
-}
-
-variable "availability_zones" {
-  description = "List of Availability Zones to deploy the cluster into."
-  type        = list(string)
-  default     = ["us-east-1a"] # If empty, ROSA will select default AZs for the region. e.g., ["us-east-1a", "us-east-1b", "us-east-1c"]
-}
-
-variable "multi_az" {
-  description = "Deploy the cluster across multiple Availability Zones."
-  type        = bool
-  default     = false # Recommended for production
-}
-
-variable "private" {
-  description = "Enable private API endpoint and private application routing (AWS PrivateLink)."
-  type        = bool
-  default     = false # Set to true if you need PrivateLink access
-}
-
-variable "tags" {
-  description = "Tags to apply to the cluster and associated AWS resources."
-  type        = map(string)
-  default = {
-    "Environment" = "Development"
-    "Project"     = "ROSA Deployment"
-    "ManagedBy"   = "Terraform"
-  }
-}
-
-# Note: OIDC Config ID and Operator Role Prefix are derived from prerequisite steps
-# using the `rosa` CLI. Ensure these match the outputs from those commands.
-# You might need to fetch these dynamically or pass them as variables if needed.
-# The `rhcs` provider assumes these roles/configs exist based on naming conventions
-# derived from the cluster name if not explicitly provided.
-
-# variable "operator_role_prefix" {
-#   description = "Prefix for the Operator IAM Roles created by `rosa create operator-roles`."
-#   type        = string
-#   # Example: default = "my-rosa-cluster-abcd" # Usually derived from cluster name + random suffix
-# }
-
-# variable "oidc_config_id" {
-#   description = "ID of the OIDC configuration created by `rosa create oidc-config`."
-#   type        = string
-# }
-
 
 # -----------------------------------------------------------------------------
 # ROSA Cluster Resource
@@ -162,52 +73,57 @@ resource "rhcs_cluster_rosa_classic" "rosa_cluster" {
   name                 = var.cluster_name
   cloud_region         = var.aws_region
   aws_account_id       = data.aws_caller_identity.current.account_id
-  # aws_subnet_ids     = [] # Optional: Specify existing subnet IDs if deploying into an existing VPC
-  availability_zones   = var.availability_zones # Optional: Specify AZs, otherwise defaults are used
+  availability_zones   = var.availability_zones
   multi_az             = var.multi_az
+  version              = var.openshift_version
+  compute_machine_type = var.compute_machine_type
+  replicas             = var.compute_nodes
+  private              = var.private
+  tags                 = var.tags
+
   properties = {
     rosa_creator_arn = data.aws_caller_identity.current.arn # Track who created the cluster via Terraform
-    "aws.access_key_id"  = var.aws_access_key
-    "aws.secret_access_key" = var.aws_secret_key
   }
 
-  # --- Corrected Version Attribute ---
-  version              = var.openshift_version # Specify the desired OpenShift version string directly
-  # --- End Correction ---
+  # --- STS Configuration Block ---
+  # This block is MANDATORY for STS clusters and tells RHCS which pre-created
+  # IAM roles and OIDC config to use.[19, 20, 1]
+  sts = {
+    # OIDC Config ID created by 'rosa create oidc-config --mode auto'
+    # MUST be provided via variable 'oidc_config_id' [19, 20]
+    oidc_config_id = var.oidc_config_id
 
-  compute_machine_type = var.compute_machine_type
-  replicas             = var.compute_nodes # Set desired number of compute nodes
-  tags                 = var.tags
-  private              = var.private # Use 'private' instead of 'private_link'
+    # Operator Role Prefix created by 'rosa create operator-roles --cluster <name>...'
+    # MUST be provided via variable 'operator_role_prefix' [19, 20]
+    operator_role_prefix = var.operator_role_prefix
 
+    # Account Role ARNs created by 'rosa create account-roles...'
+    # Assumes default prefix 'ManagedOpenShift' unless 'account_role_prefix' variable is set.
+    # Verify these roles exist in your AWS account.[19, 20]
+    role_arn         = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Installer-Role"
+    support_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Support-Role"
+    instance_iam_roles = {
+      master_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-ControlPlane-Role"
+      worker_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Worker-Role"
+    }
 
-  # If you created operator roles with a specific prefix different from the cluster name,
-  # specify it here. Otherwise, the provider derives it.
-  # operator_role_prefix = var.operator_role_prefix
+    # Optional: Specify if using an AWS Permissions Boundary
+    # permissions_boundary = var.permissions_boundary_arn
+  }
+  # --- End STS Block ---
 
-  # If you created the OIDC config manually and need to specify its ID:
-  # oidc_config_id = var.oidc_config_id
+  # Optional: Specify existing subnet IDs if deploying into an existing VPC
+  # aws_subnet_ids = var.aws_subnet_ids
 
-  # Note: The provider implicitly uses the account roles created via `rosa create account-roles`.
-  # Ensure these roles exist in the AWS account.
-
+  # Optional: Lifecycle and timeouts
   # lifecycle {
-  #   # Prevent accidental deletion of the cluster without explicit confirmation
   #   prevent_destroy = true
   # }
-
   # timeouts {
-  #   create = "90m" # Allow ample time for cluster creation
-  #   delete = "60m" # Allow time for cluster deletion
+  #   create = "90m"
+  #   delete = "60m"
   # }
 }
-
-# -----------------------------------------------------------------------------
-# Data Sources
-# -----------------------------------------------------------------------------
-
-# Get current AWS account ID and caller identity ARN
-data "aws_caller_identity" "current" {}
 
 # -----------------------------------------------------------------------------
 # Outputs
@@ -237,4 +153,14 @@ output "cluster_console_url" {
 output "cluster_state" {
   description = "Current state of the ROSA cluster (e.g., 'ready', 'installing')."
   value       = rhcs_cluster_rosa_classic.rosa_cluster.state
+}
+
+output "sts_operator_role_prefix_used" {
+  description = "The Operator Role Prefix used in the STS configuration."
+  value       = rhcs_cluster_rosa_classic.rosa_cluster.sts.operator_role_prefix
+}
+
+output "sts_oidc_config_id_used" {
+  description = "The OIDC Config ID used in the STS configuration."
+  value       = rhcs_cluster_rosa_classic.rosa_cluster.sts.oidc_config_id
 }
