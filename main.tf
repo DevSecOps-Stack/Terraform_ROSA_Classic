@@ -5,17 +5,17 @@
 # classic cluster using AWS STS for authentication.
 #
 # Prerequisites (MUST be done before terraform apply):
-# 1. Terraform CLI (>= 1.4.6) installed.[3, 4, 6, 11]
-# 2. AWS CLI installed and configured with appropriate permissions.[10, 12, 13, 4, 6, 9, 14, 11]
-# 3. ROSA CLI (`rosa`) installed.[4, 6]
-# 4. Valid Red Hat Cloud Services API token (Offline Token).[2, 3, 4, 6, 8, 9, 11]
-# 5. Run `rosa login --token=<your_token>`.[2, 4, 8, 9]
-# 6. Create Account Roles: `rosa create account-roles --mode auto --yes`.[2, 7, 8, 9]
+# 1. Terraform CLI (>= 1.4.6) installed.[1, 2, 3, 4]
+# 2. AWS CLI installed and configured with appropriate permissions.[5, 6, 2, 3, 7, 4, 8]
+# 3. ROSA CLI (`rosa`) installed.[6, 2, 3, 9]
+# 4. Valid Red Hat Cloud Services API token (Offline Token).[5, 1, 6, 2, 3, 10, 7, 4, 11, 8, 9]
+# 5. Run `rosa login --token=<your_token>`.[5, 2, 10, 7]
+# 6. Create Account Roles: `rosa create account-roles --mode auto --yes`.[5, 2, 3, 10, 7]
 #    (Note the prefix, default is 'ManagedOpenShift'. Adjust ARNs below if different).
-# 7. Create OIDC Config: `rosa create oidc-config --mode auto --yes`.[2, 7, 8]
-#    (Find the ID using `rosa list oidc-config` and set `oidc_config_id` variable).
-# 8. Create Operator Roles: `rosa create operator-roles --cluster <var.cluster_name> --mode auto --yes`.[2, 7, 8]
-#    (Find the exact prefix using `rosa list operator-roles` and set `operator_role_prefix` variable).
+# 7. Create OIDC Config: `rosa create oidc-config --mode auto --yes`.[2, 3, 10]
+#    (Find the ID using `rosa list oidc-config` and set `oidc_config_id` variable).[2, 10]
+# 8. Create Operator Roles: `rosa create operator-roles --cluster <var.cluster_name> --mode auto --yes`.[2, 3, 10]
+#    (Find the exact prefix using `rosa list operator-roles` and set `operator_role_prefix` variable).[2, 10]
 # -----------------------------------------------------------------------------
 
 terraform {
@@ -29,7 +29,7 @@ terraform {
       version = "~> 1.6" # Using version constraint based on user's input
     }
   }
-  required_version = ">= 1.4.6" # Recommended minimum version [3, 4, 6, 11]
+  required_version = ">= 1.4.6" # Recommended minimum version [1, 2, 3, 4, 8]
 }
 
 # -----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ terraform {
 # -----------------------------------------------------------------------------
 
 # Configure the Red Hat Cloud Services Provider
-# Token is best provided via TF_VAR_rhcs_token environment variable or a secure tfvars file [2, 3, 4]
+# Token is best provided via TF_VAR_rhcs_token environment variable or a secure tfvars file [5, 1, 2]
 provider "rhcs" {
   token = var.rhcs_token
   url   = var.rhcs_url
@@ -45,7 +45,7 @@ provider "rhcs" {
 
 # Configure the AWS Provider
 # Assumes AWS credentials are configured via environment variables,
-# shared credentials file (~/.aws/credentials), or IAM instance profile.[10, 15, 12, 2, 13, 4, 16, 9, 14, 17, 11, 18]
+# shared credentials file (~/.aws/credentials), or IAM instance profile.[12, 13, 14, 5, 1, 6, 15, 2, 3, 16, 7, 17, 18, 4, 8]
 provider "aws" {
   region = var.aws_region
 }
@@ -59,7 +59,7 @@ data "aws_caller_identity" "current" {}
 
 # Get default AWS Account Role prefix if not provided
 locals {
-  # Default prefix used by 'rosa create account-roles --mode auto'
+  # Default prefix used by 'rosa create account-roles --mode auto' [5, 2, 19]
   default_account_role_prefix = "ManagedOpenShift"
   # Use provided prefix if set, otherwise use the default
   account_role_prefix = coalesce(var.account_role_prefix, local.default_account_role_prefix)
@@ -87,24 +87,25 @@ resource "rhcs_cluster_rosa_classic" "rosa_cluster" {
 
   # --- STS Configuration Block ---
   # This block is MANDATORY for STS clusters and tells RHCS which pre-created
-  # IAM roles and OIDC config to use.[19, 20, 1]
+  # IAM roles and OIDC config to use.[9, 20, 21, 22]
   sts = {
     # OIDC Config ID created by 'rosa create oidc-config --mode auto'
-    # MUST be provided via variable 'oidc_config_id' [19, 20]
+    # MUST be provided via variable 'oidc_config_id' [9, 20]
     oidc_config_id = var.oidc_config_id
 
     # Operator Role Prefix created by 'rosa create operator-roles --cluster <name>...'
-    # MUST be provided via variable 'operator_role_prefix' [19, 20]
+    # MUST be provided via variable 'operator_role_prefix' [9, 20]
     operator_role_prefix = var.operator_role_prefix
 
     # Account Role ARNs created by 'rosa create account-roles...'
     # Assumes default prefix 'ManagedOpenShift' unless 'account_role_prefix' variable is set.
-    # Verify these roles exist in your AWS account.[19, 20]
-    role_arn         = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Installer-Role"
-    support_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Support-Role"
+    # Verify these roles exist in your AWS account.[9, 20]
+    # Using 'aws' partition directly as aws_caller_identity doesn't expose partition.
+    role_arn         = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Installer-Role"
+    support_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Support-Role"
     instance_iam_roles = {
-      master_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-ControlPlane-Role"
-      worker_role_arn = "arn:${data.aws_caller_identity.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Worker-Role"
+      master_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-ControlPlane-Role"
+      worker_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.account_role_prefix}-Worker-Role"
     }
 
     # Optional: Specify if using an AWS Permissions Boundary
