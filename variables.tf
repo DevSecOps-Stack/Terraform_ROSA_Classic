@@ -49,7 +49,7 @@ variable "compute_nodes" {
 variable "availability_zones" {
   description = "List of Availability Zones for the default machine pool. If empty, ROSA selects defaults. For multi-AZ, provide 3 zones."
   type        = list(string)
-  default     = us-east-1a
+  default     = "us-east-1a"
   # Example for multi-AZ: default = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
