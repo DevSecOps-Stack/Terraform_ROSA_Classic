@@ -2,6 +2,10 @@ Deploy linux jump box
 
 Authenticate with iam key and secret by aws configure
 
+sudo yum update -y
+
+sudo yum install git -y
+
 Install Terraform using install_terraform.sh script
 
 sign into redhat console with gmail and password and not with google auth
@@ -19,6 +23,10 @@ sudo mv rosa /usr/local/bin/rosa
 rosa version
 
 rosa login
+
+get rosa token
+
+https://console.redhat.com/openshift/token/rosa/show
 
 rosa create ocm-role --admin
 
