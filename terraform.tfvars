@@ -5,7 +5,7 @@
 rhcs_token = "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0NzQzYTkzMC03YmJiLTRkZGQtOTgzMS00ODcxNGRlZDc0YjUifQ.eyJpYXQiOjE3NDYwMzMxMjEsImp0aSI6ImRiNDJkNTIxLTBkOTQtNDcyMi04YmFkLTgwZWIxMDgxYjM5OCIsImlzcyI6Imh0dHBzOi8vc3NvLnJlZGhhdC5jb20vYXV0aC9yZWFsbXMvcmVkaGF0LWV4dGVybmFsIiwiYXVkIjoiaHR0cHM6Ly9zc28ucmVkaGF0LmNvbS9hdXRoL3JlYWxtcy9yZWRoYXQtZXh0ZXJuYWwiLCJzdWIiOiJmOjUyOGQ3NmZmLWY3MDgtNDNlZC04Y2Q1LWZlMTZmNGZlMGNlNjpyYWtlc2hwYW5keWFsYTk0IiwidHlwIjoiT2ZmbGluZSIsImF6cCI6ImNsb3VkLXNlcnZpY2VzIiwibm9uY2UiOiI3MTBiMDg1OS0zMjUzLTQyY2MtYTIzNi04NzRhOTllMGY3ZTIiLCJzaWQiOiIzYTMwNzQxNy05MWUyLTQ0MTItYjdjNC0zYWU3MTU1ZmVkMzUiLCJzY29wZSI6Im9wZW5pZCBiYXNpYyBhcGkuaWFtLnNlcnZpY2VfYWNjb3VudHMgcm9sZXMgd2ViLW9yaWdpbnMgY2xpZW50X3R5cGUucHJlX2tjMjUgb2ZmbGluZV9hY2Nlc3MifQ.dIExfvEoj0miLtAPJ1qrvdCO-IsQMRlm5DrszbB17fs6VAtoan_nP3CRsu-5egf8RTYISuG658gDXxIQayCQTA" # Example: Keep commented out if using env var
 
 # Cluster Configuration
-cluster_name      = "rosa-test-cluster" # Must be <= 15 chars
+cluster_name      = "rosa-test" # Must be <= 15 chars
 aws_region        = "us-east-1"         # Choose your desired AWS region
 openshift_version = "4.14.9"            # Specify a valid, available version from 'rosa list versions'
 
