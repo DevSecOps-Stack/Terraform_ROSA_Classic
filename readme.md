@@ -48,7 +48,8 @@ rosa list user-roles -> after fetching the userrole delete it with below command
 
 rosa delete user-role --mode auto -y
 
-Remove the Role from the master/worker Instance Profile:
+*Remove the Role from the master/worker Instance Profile*
+------------------------------------------------------------------
 
 aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg8-master-profile --role-name ManagedOpenShift-ControlPlane-Role
 
