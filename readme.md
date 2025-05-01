@@ -1,5 +1,4 @@
-**Deploy linux jump box**
----------------------------
+Deploy linux jump box
 
 Authenticate with iam key and secret by aws configure
 
