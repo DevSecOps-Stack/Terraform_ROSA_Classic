@@ -40,7 +40,7 @@ rosa create account-roles --mode auto
 
 aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
 
-***cleanup after demo***
+*Cleanup after demo*
 --------------------------------------------------------------------
 rosa delete operator-roles --prefix rosa-test-muwy --mode auto -y
 
@@ -55,16 +55,17 @@ aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg
 
 aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg8-worker-profile --role-name ManagedOpenShift-Worker-Role
 
-Delete the master/workder Instance Profile:
-
+*Delete the master/workder Instance Profile*
+------------------------------------------------------------------
 aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-master-profile
-
 aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-worker-profile
 
+*Delete the account roles*
+-------------------------------------------------------------------
 rosa delete account-roles --prefix ManagedOpenShift --mode auto -y
 
-delete the openshift refresh token
-
+*Delete the openshift refresh token*
+-------------------------------------------------------------------
 https://console.redhat.com/openshift/token/rosa/show
 
 aws iam delete create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
