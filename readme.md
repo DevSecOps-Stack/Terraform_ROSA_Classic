@@ -58,6 +58,7 @@ aws iam remove-role-from-instance-profile --instance-profile-name rosa-test-h8kg
 *Delete the master/workder Instance Profile*
 ------------------------------------------------------------------
 aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-master-profile
+
 aws iam delete-instance-profile --instance-profile-name rosa-test-h8kg8-worker-profile
 
 *Delete the account roles*
