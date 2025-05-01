@@ -42,7 +42,7 @@ rosa create account-roles --mode auto
 
 aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
 
-#Cleanup after demo#
+*Cleanup after demo*
 --------------------------------------------------------------------
 rosa delete operator-roles --prefix rosa-test-muwy --mode auto -y
 
