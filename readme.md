@@ -28,6 +28,8 @@ get rosa token
 
 https://console.redhat.com/openshift/token/rosa/show
 
+*Create Roles*
+-------------------------------------------------------------------------
 rosa create operator-roles  --prefix "rosa-test-muwy" --oidc-config-id "2ig0e61j4dk2g58jak27l2pe38d46tci"  --installer-role-arn arn:aws:iam::371917992023:role/ManagedOpenShift-Installer-Role
 
 rosa create oidc-provider --oidc-config-id "2ig0e61j4dk2g58jak27l2pe38d46tci"
